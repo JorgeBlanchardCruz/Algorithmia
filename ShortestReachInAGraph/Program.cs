@@ -28,9 +28,13 @@ Console.ReadKey();
 
 
 
+int problemCount = Convert.ToInt32(Console.ReadKey());
+int currentProblem = 1;
+do
+{
 
 
 
-/*
- * https://www.hackerrank.com/challenges/ctci-bfs-shortest-reach/problem
- */
+} while ((currentProblem <= problemCount));
+
+

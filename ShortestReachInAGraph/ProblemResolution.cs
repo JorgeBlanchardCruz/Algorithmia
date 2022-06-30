@@ -31,23 +31,20 @@ public class ProblemResolution
 
     private record GraphWeight(string Node, int Weight);
 
-    public static List<string> ProcessGraphs(List<string> problem)
+    public static string ProcessGraphs(List<string> problem)
     {
-        var graphs = FillGraphs(problem);
+        var graph = FillGraphs(problem);
 
-        var graphWeights = GetWeights(graphs);
+        var graphWeights = GetWeights(graph);
 
         var result = BuildResult(graphWeights);
 
         return result;
     }
 
-    private static List<Graph> FillGraphs(List<string> problem)
+    private static Graph FillGraphs(List<string> problem)
     {
-        List<Graph> graphs = new() { new Graph() };
-
-        int problemsCount = Convert.ToInt32(problem[0]);
-        problem.RemoveAt(0);
+        Graph graph = new();
 
         foreach (var item in problem)
         {
@@ -55,98 +52,94 @@ public class ProblemResolution
 
             if (edge.Length == 1)
             {
-                graphs[GetCurrentGraph()].NodeStart = edge[0];
-                graphs.Add(new Graph());
+                graph.NodeStart = edge[0];
                 continue;
             }
 
-            graphs[GetCurrentGraph()].Edges.Add(new Edge(edge[0], edge[1]));
+            graph.Edges.Add(new Edge(edge[0], edge[1]));
         }
 
-        graphs.RemoveAt(GetCurrentGraph());
+        return graph;
+    }
 
-        if (problemsCount != graphs.Count())
-            throw new Exception("The number of problems do not match");
-
-        return graphs;
-
-
-        int GetCurrentGraph()
-        {
-            return graphs.Count - 1;
-        }
-    }    
-
-    private static List<List<GraphWeight>> GetWeights(List<Graph> graphs)
+    private static List<GraphWeight> GetWeights(Graph graph)
     {
-        List<List<GraphWeight>> graphsWeights = new();
-        foreach (var graph in graphs)
+        List<GraphWeight> graphWeights = new();
+
+        Edge prevEdge = graph.Edges[0];
+        int lenMultiplier = 1;
+        foreach (var edge in graph.Edges)
         {
-            graphsWeights.Add(new List<GraphWeight>());
+            if (CaseOf_NodeAIsNodeStart(edge))
+                continue;
 
-            Edge prevEdge = graph.Edges[0];
-            int lenMultiplier = 1;
-            foreach (var edge in graph.Edges)
+            if (Caseof_NodeAEqualNodeB(edge))
+                continue;            
+
+            if (Caseof_ExistNodeBEqualNodeA(edge))    
+                continue;
+
+            lenMultiplier = 1;
+            graphWeights.Add(new GraphWeight(edge.nodeA, -1));
+        }
+
+        return graphWeights;
+
+
+        bool CaseOf_NodeAIsNodeStart(Edge edge)
+        {
+            if (edge.nodeA == graph.NodeStart)
             {
-                if (edge.nodeA == graph.NodeStart)
-                {
-                    graphsWeights[GetCurrentGraph()].Add(new GraphWeight(edge.nodeB, EdgeLen));
-                    prevEdge = edge;
-                    lenMultiplier = 1;
-
-                    continue;
-                }
-
-                if (edge.nodeA == prevEdge.nodeB)
-                {
-                    lenMultiplier++;
-                    graphsWeights[GetCurrentGraph()].Add(new GraphWeight(edge.nodeB, EdgeLen * lenMultiplier));
-                    prevEdge = edge;
-                    
-                    continue;
-                }
-
+                graphWeights.Add(new GraphWeight(edge.nodeB, EdgeLen));
+                prevEdge = edge;
                 lenMultiplier = 1;
 
-                if (graph.Edges.Exists(x => x.nodeB == edge.nodeA))
-                {
-                    graphsWeights[GetCurrentGraph()].Add(new GraphWeight(edge.nodeB, -1));
-                    continue;
-                }
-                
-                graphsWeights[GetCurrentGraph()].Add(new GraphWeight(edge.nodeA, -1));
+                return true;
             }
+
+            return false;
         }
 
-        return graphsWeights;
-
-
-        int GetCurrentGraph()
+        bool Caseof_NodeAEqualNodeB(Edge edge)
         {
-            return graphsWeights.Count - 1;
+            if (edge.nodeA == prevEdge.nodeB)
+            {
+                lenMultiplier++;
+                graphWeights.Add(new GraphWeight(edge.nodeB, EdgeLen * lenMultiplier));
+                prevEdge = edge;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        bool Caseof_ExistNodeBEqualNodeA(Edge edge)
+        {
+            if (graph.Edges.Exists(x => x.nodeB == edge.nodeA))
+            {
+                graphWeights.Add(new GraphWeight(edge.nodeB, -1));
+
+                return true;
+            }
+
+            return false;
         }
     }
 
-    private static List<string> BuildResult(List<List<GraphWeight>> weights)
+    private static string BuildResult(List<GraphWeight> weights)
     {
-        List<string> result = new();
-        foreach (var graphWeights in weights)
+        var shortedWeights = from w in weights
+                                orderby w.Node
+                                select w;
+
+        StringBuilder lineWeight = new();
+        foreach (var weight in shortedWeights)
         {
-            var shortedWeights = from w in graphWeights
-                                 orderby w.Node
-                                 select w;
-
-            StringBuilder lineWeight = new();
-            foreach (var weight in shortedWeights)
-            {
-                lineWeight.Append($"{weight.Weight} ");
-            }
-
-
-            result.Add(lineWeight.ToString());
+            lineWeight.Append($"{weight.Weight} ");
         }
 
-        return result;
+        return lineWeight.ToString();
     }
 
 }
