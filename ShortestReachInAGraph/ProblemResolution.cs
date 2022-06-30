@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace ShortestReachInAGraph;
+﻿namespace ShortestReachInAGraph;
 
 public class ProblemResolution
 {
@@ -129,13 +127,17 @@ public class ProblemResolution
 
     private static string BuildResult(List<GraphWeight> weights)
     {
-        var shortedWeights = from w in weights
-                                orderby w.Node
-                                select w;
+        var shortedWeights = (from w in weights
+                              orderby w.Node
+                              select w).ToList();
+
+        int minNode = shortedWeights.Min(x => int.Parse(x.Node));
+        int maxNode = shortedWeights.Max(x => int.Parse(x.Node));
 
         StringBuilder lineWeight = new();
-        foreach (var weight in shortedWeights)
+        for (int i = minNode; i <= maxNode; i++)
         {
+            var weight = shortedWeights[i];
             lineWeight.Append($"{weight.Weight} ");
         }
 
