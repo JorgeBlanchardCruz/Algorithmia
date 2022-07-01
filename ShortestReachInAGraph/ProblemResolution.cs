@@ -2,9 +2,10 @@
 
 public class ProblemResolution
 {
-    private const int EdgeLen = 6;
+    private const int EDGE_DISTANCE = 6;
+    private const int EDGE_NULLDISTANCE = -1;
 
-    public class Edge
+    public record Edge
     {
         public string nodeA;
         public string nodeB;
@@ -16,10 +17,10 @@ public class ProblemResolution
         }
     }
 
-    private class Graph
+    private record Graph
     {
         public List<Edge> Edges;
-        public string NodeStart;
+        public string StartNode;
 
         public Graph()
         {
@@ -27,15 +28,26 @@ public class ProblemResolution
         }
     }
 
-    private record GraphWeight(string Node, int Weight);
+    private record GraphDistances
+    {
+        public string Node;
+        public int Distance;
+
+        public GraphDistances(string Node, int Distance)
+        {
+            this.Node = Node;
+            this.Distance = Distance;
+        }
+    }
+
 
     public static string ProcessGraphs(List<string> problem)
     {
         var graph = FillGraphs(problem);
 
-        var graphWeights = GetWeights(graph);
+        var graphDistances = ProcessDistances(graph);
 
-        var result = BuildResult(graphWeights);
+        var result = BuildResult(graphDistances, graph.StartNode);
 
         return result;
     }
@@ -50,7 +62,7 @@ public class ProblemResolution
 
             if (edge.Length == 1)
             {
-                graph.NodeStart = edge[0];
+                graph.StartNode = edge[0];
                 continue;
             }
 
@@ -60,85 +72,70 @@ public class ProblemResolution
         return graph;
     }
 
-    private static List<GraphWeight> GetWeights(Graph graph)
+    private static List<GraphDistances> ProcessDistances(Graph graph)
     {
-        List<GraphWeight> graphWeights = new();
-
-        Edge prevEdge = graph.Edges[0];
-        int lenMultiplier = 1;
-        foreach (var edge in graph.Edges)
+        List<GraphDistances> distances = new();
+        bool startNodeFound = false;
+        foreach (var currentEdge in graph.Edges)
         {
-            if (CaseOf_NodeAIsNodeStart(edge))
-                continue;
+            if (!startNodeFound && (currentEdge.nodeA == graph.StartNode || currentEdge.nodeB == graph.StartNode))
+                startNodeFound = true;
 
-            if (Caseof_NodeAEqualNodeB(edge))
-                continue;            
+            if (!startNodeFound)
+            {                
+                if (!distances.Exists(x => x.Node == currentEdge.nodeA))
+                    distances.Add(new GraphDistances(currentEdge.nodeA, EDGE_NULLDISTANCE));
 
-            if (Caseof_ExistNodeBEqualNodeA(edge))    
-                continue;
-
-            lenMultiplier = 1;
-            graphWeights.Add(new GraphWeight(edge.nodeA, -1));
-        }
-
-        return graphWeights;
-
-
-        bool CaseOf_NodeAIsNodeStart(Edge edge)
-        {
-            if (edge.nodeA == graph.NodeStart)
-            {
-                graphWeights.Add(new GraphWeight(edge.nodeB, EdgeLen));
-                prevEdge = edge;
-                lenMultiplier = 1;
-
-                return true;
+                if (!distances.Exists(x => x.Node == currentEdge.nodeB))
+                {
+                    distances.Add(new GraphDistances(currentEdge.nodeB, EDGE_NULLDISTANCE));
+                    continue;
+                }
             }
 
-            return false;
+            var previousEdge = graph.Edges.Find(x => currentEdge.nodeA == x.nodeB);
+
+            AddNodeDistance(currentEdge.nodeA, previousEdge is null ? string.Empty : previousEdge.nodeA);
+            AddNodeDistance(currentEdge.nodeB, currentEdge.nodeA);
+
         }
 
-        bool Caseof_NodeAEqualNodeB(Edge edge)
+        return distances;
+
+
+        void AddNodeDistance(string node, string previousNode)
         {
-            if (edge.nodeA == prevEdge.nodeB)
-            {
-                lenMultiplier++;
-                graphWeights.Add(new GraphWeight(edge.nodeB, EdgeLen * lenMultiplier));
-                prevEdge = edge;
-
-                return true;
-            }
-
-            return false;
-        }
-
-        bool Caseof_ExistNodeBEqualNodeA(Edge edge)
-        {
-            if (graph.Edges.Exists(x => x.nodeB == edge.nodeA))
-            {
-                graphWeights.Add(new GraphWeight(edge.nodeB, -1));
-
-                return true;
-            }
-
-            return false;
+            var previousDistance = distances.Find(x => x.Node == previousNode);
+            var distanceFound = distances.Find(x => x.Node == node);
+            if (distanceFound is not null)
+                distanceFound.Distance = (previousDistance is null ? 0 : previousDistance.Distance) + EDGE_DISTANCE;
+            else
+                distances.Add(new GraphDistances(node, EDGE_DISTANCE));
         }
     }
 
-    private static string BuildResult(List<GraphWeight> weights)
+    private static string BuildResult(List<GraphDistances> distances, string startNode)
     {
-        var shortedWeights = (from w in weights
+        var shortedDistances = (from w in distances
                               orderby w.Node
                               select w).ToList();
 
-        int minNode = shortedWeights.Min(x => int.Parse(x.Node));
-        int maxNode = shortedWeights.Max(x => int.Parse(x.Node));
+        int minNode = shortedDistances.Min(x => int.Parse(x.Node));
+        int maxNode = shortedDistances.Max(x => int.Parse(x.Node));
 
         StringBuilder lineWeight = new();
-        for (int i = minNode; i <= maxNode; i++)
+        for (int i = minNode - 1; i < maxNode; i++)
         {
-            var weight = shortedWeights[i];
-            lineWeight.Append($"{weight.Weight} ");
+            var currentDistance = shortedDistances.Find(x => x.Node == (i + 1).ToString());
+
+            if (currentDistance is null)
+            {
+                lineWeight.Append($"{EDGE_NULLDISTANCE} ");
+                continue;
+            }
+            
+            if (currentDistance.Node != startNode)
+                lineWeight.Append($"{currentDistance.Distance} ");
         }
 
         return lineWeight.ToString();
