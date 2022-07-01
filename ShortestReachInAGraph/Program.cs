@@ -12,26 +12,23 @@ using ShortestReachInAGraph;
 //    "2"
 //};
 
-//var expected = new List<string>() { 
-//    "6 6 -1 ",
-//    "-1 6"
-//};
-
+//ESTO ES PARA PROBAR RÁPIDO
 class Solution
 {
     static void Main(String[] args)
     {
         var graphs = new List<string>() {
-            "7 4",
+            "6 4",
             "1 2",
-            "1 3",
+            "2 3",
             "3 4",
-            "2 5",
+            "1 5",
             "2"
         };
 
         var results = ProblemResolution.ProcessGraphs(graphs);
         Console.WriteLine(results);
+        Console.ReadKey();
     }
 }
 
