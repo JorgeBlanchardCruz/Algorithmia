@@ -1,32 +1,41 @@
 ﻿global using System.Text;
 using ShortestReachInAGraph;
 
-//var graphs = new List<string>() {
-//    "2",
-//    "4 2",
-//    "1 2",
-//    "1 3",
-//    "1",
-//    "3 1",
-//    "2 3",
-//    "2"
-//};
-
 //ESTO ES PARA PROBAR RÁPIDO
 class Solution
 {
     static void Main(String[] args)
     {
-        var graphs = new List<string>() {
-            "6 4",
-            "1 2",
-            "2 3",
-            "3 4",
-            "1 5",
-            "2"
-        };
+        //var graphs = new List<string>() {
+        //    "2",
+        //    "4 2",
+        //    "1 2",
+        //    "1 3",
+        //    "1",
+        //    "3 1",
+        //    "2 3",
+        //    "2"
+        //};
 
-        var results = ProblemResolution.ProcessGraphs(graphs);
+        var graphs = new List<string>() {
+            "7 4",
+            "1 2",
+            "1 3",
+            "3 4",
+            "2 5",
+            "2"
+        }; //out 6 12 18 6 -1 -1
+
+        //var graphs = new List<string>() {
+        //    "6 4",
+        //    "1 2",
+        //    "2 3",
+        //    "3 4",
+        //    "1 5",
+        //    "1"
+        //}; //out 6 12 18 6 -1
+
+        var results = ProblemResolution.ProcessGraph(graphs);
         Console.WriteLine(results);
         Console.ReadKey();
     }
