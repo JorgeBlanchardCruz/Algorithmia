@@ -5,7 +5,7 @@ public class ProblemResolution
     private const int EDGE_DISTANCE = 6;
     private const int EDGE_NULLDISTANCE = -1;
 
-    public record Edge
+    private record Edge
     {
         public string nodeA;
         public string nodeB;
@@ -41,7 +41,7 @@ public class ProblemResolution
     }
 
 
-    public static string ProcessGraphs(List<string> problem)
+    public static string ProcessGraph(List<string> problem)
     {
         var graph = FillGraphs(problem);
 
@@ -82,35 +82,42 @@ public class ProblemResolution
                 startNodeFound = true;
 
             if (!startNodeFound)
-            {                
-                if (!distances.Exists(x => x.Node == currentEdge.nodeA))
-                    distances.Add(new GraphDistances(currentEdge.nodeA, EDGE_NULLDISTANCE));
-
-                if (!distances.Exists(x => x.Node == currentEdge.nodeB))
-                {
-                    distances.Add(new GraphDistances(currentEdge.nodeB, EDGE_NULLDISTANCE));
-                    continue;
-                }
+            {
+                AddUnreachableNodes(currentEdge);
+                continue;
             }
 
             var previousEdge = graph.Edges.Find(x => currentEdge.nodeA == x.nodeB);
 
             AddNodeDistance(currentEdge.nodeA, previousEdge is null ? string.Empty : previousEdge.nodeA);
             AddNodeDistance(currentEdge.nodeB, currentEdge.nodeA);
-
         }
 
         return distances;
 
 
+        void AddUnreachableNodes(Edge currentEdge)
+        {
+            if (!distances.Exists(x => x.Node == currentEdge.nodeA))
+                distances.Add(new GraphDistances(currentEdge.nodeA, EDGE_NULLDISTANCE));
+
+            if (!distances.Exists(x => x.Node == currentEdge.nodeB))
+                distances.Add(new GraphDistances(currentEdge.nodeB, EDGE_NULLDISTANCE));
+        }
+
         void AddNodeDistance(string node, string previousNode)
         {
             var previousDistance = distances.Find(x => x.Node == previousNode);
+
             var distanceFound = distances.Find(x => x.Node == node);
-            if (distanceFound is not null)
-                distanceFound.Distance = (previousDistance is null ? 0 : previousDistance.Distance) + EDGE_DISTANCE;
-            else
-                distances.Add(new GraphDistances(node, EDGE_DISTANCE));
+            if (distanceFound is null)
+            {
+                if (node != graph.StartNode)
+                    distances.Add(new GraphDistances(node, (previousDistance is null ? 0 : previousDistance.Distance) + EDGE_DISTANCE));
+                return;
+            }
+            
+            distanceFound.Distance = (previousDistance is null ? 0 : previousDistance.Distance) + EDGE_DISTANCE;
         }
     }
 
@@ -126,11 +133,12 @@ public class ProblemResolution
         StringBuilder lineWeight = new();
         for (int i = minNode - 1; i < maxNode; i++)
         {
-            var currentDistance = shortedDistances.Find(x => x.Node == (i + 1).ToString());
+            var currentDistance = shortedDistances.Find(x => x.Node == iPlusToString(i));
 
             if (currentDistance is null)
             {
-                lineWeight.Append($"{EDGE_NULLDISTANCE} ");
+                if (iPlusToString(i) != startNode)
+                    lineWeight.Append($"{EDGE_NULLDISTANCE} ");
                 continue;
             }
             
@@ -139,6 +147,12 @@ public class ProblemResolution
         }
 
         return lineWeight.ToString();
+
+
+        string iPlusToString(int i)
+        {
+            return (i + 1).ToString();
+        }
     }
 
 }
